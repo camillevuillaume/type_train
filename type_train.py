@@ -1,7 +1,7 @@
 import curses
+import curses.ascii
 import random
 import nltk
-import textwrap
 import time
 
 nltk.download('reuters')
@@ -27,44 +27,68 @@ def generate_sentence(length):
 
     return ' '.join(sentence)
 
+def wrap_text(text, width):
+    words = text.split()
+    lines = []
+    line = ""
+    for word in words:
+        if len(line) + len(word)  < width:
+            line += word + " "
+        else:
+            lines.append(line)
+            line = word + " "
+    lines.append(line)
+    return lines
 
-def printscreen(stdscr, message, percentage, speed):
+
+def printscreen(stdscr, message, percentage, speed, cursor):
     height, width = stdscr.getmaxyx()
-    wrapped_message = textwrap.wrap(message, width)
+    wrapped_message = wrap_text(message, width)
 
-    stdscr.addstr(0, 0, "correct: " + f"{percentage: .1f}" + "% | " + f"{speed: .1f}" + " characters per min | Ctrl+C to exit", curses.A_REVERSE)
+    stdscr.addstr(0, 0, "correct: " + f"{percentage: .1f}" + "% | " + f"{speed: .1f}" + " characters per min | ESC to exit", curses.A_REVERSE)
     y = 1
+    position = 0
 
     for line in wrapped_message:
-        stdscr.addstr(y, 0, line)
+        stdscr.addstr(y, 0, line, curses.A_NORMAL)
+        if(position <= cursor and cursor - position < len(line)):
+            stdscr.chgat(y, cursor - position, 1, curses.A_REVERSE)
+        position += len(line)
         y += 1
-    stdscr.refresh()
+    stdscr.refresh() 
     
 
 def main(stdscr):
 
     message = generate_sentence(50)
+    correct = []
 
     # Initialize ncurses
     curses.curs_set(0)
+    curses.start_color()
 
-    printscreen(stdscr, message, 0, 0)
+    printscreen(stdscr, message, 0, 0, 0)
     start = time.time()
 
     x = 0
-    ok = 0
     while(x < len(message)):
         ch = stdscr.getch()
-        if ch == ord(message[x]):
-            ok += 1
-        
-        x += 1
+        if ch == curses.ascii.ESC:
+            break
+        if ch in (curses.KEY_BACKSPACE, 127, 8):
+            if x > 0:
+                x -= 1
+                correct.pop()
+        else:
+            if ch == ord(message[x]):
+                correct.append(1)
+            else:
+                correct.append(0)
+            x += 1
         current = time.time()
-        speed = ok / (current - start) * 60
-        percentage = ok / x * 100
-        printscreen(stdscr, message, percentage, speed)
-    # Wait for user input
-    stdscr.getch()
+        speed = sum(correct) / (current - start) * 60
+        percentage = sum(correct) / x * 100
+        printscreen(stdscr, message, percentage, speed, x)
 
 
 # Run the application
