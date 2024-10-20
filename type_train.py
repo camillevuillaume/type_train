@@ -41,7 +41,7 @@ def wrap_text(text, width):
     return lines
 
 
-def printscreen(stdscr, message, percentage, speed, cursor):
+def printscreen(stdscr, message, percentage, speed, cursor, correct):
     height, width = stdscr.getmaxyx()
     wrapped_message = wrap_text(message, width)
 
@@ -53,6 +53,13 @@ def printscreen(stdscr, message, percentage, speed, cursor):
         stdscr.addstr(y, 0, line, curses.A_NORMAL)
         if(position <= cursor and cursor - position < len(line)):
             stdscr.chgat(y, cursor - position, 1, curses.A_REVERSE)
+        for i in range(len(line)):
+            if(position + i >= cursor):
+                break
+            elif correct[position + i] == 1:
+                stdscr.chgat(y, i, 1, curses.color_pair(1))
+            elif correct[position + i] == 0 and position + i < cursor:
+                stdscr.chgat(y, i, 1, curses.color_pair(2))
         position += len(line)
         y += 1
     stdscr.refresh() 
@@ -66,8 +73,10 @@ def main(stdscr):
     # Initialize ncurses
     curses.curs_set(0)
     curses.start_color()
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
 
-    printscreen(stdscr, message, 0, 0, 0)
+    printscreen(stdscr, message, 0, 0, 0, correct)
     start = time.time()
 
     x = 0
@@ -88,7 +97,7 @@ def main(stdscr):
         current = time.time()
         speed = sum(correct) / (current - start) * 60
         percentage = sum(correct) / x * 100
-        printscreen(stdscr, message, percentage, speed, x)
+        printscreen(stdscr, message, percentage, speed, x, correct)
 
 
 # Run the application
