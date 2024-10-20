@@ -45,7 +45,7 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct):
     height, width = stdscr.getmaxyx()
     wrapped_message = wrap_text(message, width)
 
-    stdscr.addstr(0, 0, "correct: " + f"{percentage: .1f}" + "% | " + f"{speed: .1f}" + " characters per min | ESC to exit", curses.A_REVERSE)
+    stdscr.addstr(0, 0, "correct: " + f"{percentage: .1f}" + "% | " + f"{speed: .1f}" + " words per min | ESC to exit    ", curses.A_REVERSE)
     y = 1
     position = 0
 
@@ -95,10 +95,11 @@ def main(stdscr):
                 correct.append(0)
             x += 1
         current = time.time()
-        speed = sum(correct) / (current - start) * 60
+        speed = sum(correct)/5 / (current - start) * 60
         percentage = sum(correct) / x * 100
         printscreen(stdscr, message, percentage, speed, x, correct)
 
+    stdscr.getch()
 
 # Run the application
 
