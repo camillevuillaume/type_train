@@ -3,6 +3,7 @@ import curses.ascii
 import random
 import nltk
 import time
+import configparser
 
 nltk.download('reuters')
 nltk.download('punkt')
@@ -67,8 +68,10 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct):
     
 
 def main(stdscr):
+    config = configparser.ConfigParser()
+    config.read('config.ini')
 
-    message = generate_sentence(50)
+    message = generate_sentence(config['UI'].getint('TextLength'))
     correct = []
 
     # Initialize ncurses
