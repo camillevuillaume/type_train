@@ -4,7 +4,7 @@ The script generates a random sentence with a given number of words using the Py
 Your job is to type the sentence following the cursor (you can also use backspace). The script displays your accuracy and speed (measured in correct characters per minute).
 You can exit at any time by pressing ESC.
 
-Note that the sentences are generated using a rather simple method (calculate frequencies of pair of consecutive words in a a large corpus of text, select next word based on calcualted frequencies) and in most cases, will not make sense. 
+Note that the sentences are generated using a rather simple method (calculate frequencies of pair of consecutive words in a large corpus of text, select next word based on calcualted frequencies) and in most cases, will not make sense. 
 
 ## Prerequisites 
 The script needs the python nltk package, which can be install with:
