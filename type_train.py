@@ -62,7 +62,8 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct):
                 stdscr.chgat(y, i, 1, curses.color_pair(2))
         position += len(line)
         y += 1
-    stdscr.refresh() 
+    stdscr.refresh()
+    return y
     
 
 def main(stdscr):
@@ -80,6 +81,7 @@ def main(stdscr):
     start = time.time()
 
     x = 0
+    y = 0
     while(x < len(message)):
         ch = stdscr.getch()
         if ch == curses.ascii.ESC:
@@ -97,7 +99,8 @@ def main(stdscr):
         current = time.time()
         speed = sum(correct)/5 / (current - start) * 60
         percentage = sum(correct) / x * 100
-        printscreen(stdscr, message, percentage, speed, x, correct)
+        y = printscreen(stdscr, message, percentage, speed, x, correct)
+    stdscr.addstr(y, 0, "Press any key to exit", curses.A_REVERSE) 
 
     stdscr.getch()
 
