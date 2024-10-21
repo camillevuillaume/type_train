@@ -7,6 +7,7 @@ You can exit at any time by pressing ESC.
 Note that the sentences are generated using a rather simple method (calculate frequencies of pair of consecutive words in a large corpus of text, select next word based on calcualted frequencies) and in most cases, will not make sense. 
 
 ## Prerequisites 
+Tested on Linux, should also work on MacOS. Windows is currently not supported.
 The script needs the python nltk package, which can be install with:
 ```sh
 pip install nltk
