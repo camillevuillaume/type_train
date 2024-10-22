@@ -52,11 +52,11 @@ def wrap_text(text, width):
     return lines
 
 
-def printscreen(stdscr, message, percentage, speed, cursor, correct):
+def printscreen(stdscr, message, percentage, speed, cursor, correct, time):
     height, width = stdscr.getmaxyx()
     wrapped_message = wrap_text(message, width)
 
-    stdscr.addstr(0, 0, "correct: " + f"{percentage: .1f}" + "% | " + f"{speed: .1f}" + " words per min | ESC to exit    ", curses.A_REVERSE)
+    stdscr.addstr(0, 0, f"{speed: .1f} words per min | {percentage: .1f} % accuracy | {time: .1f} s | ESC to exit    ", curses.A_REVERSE)
     y = 1
     position = 0
 
@@ -76,6 +76,44 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct):
     stdscr.refresh()
     return y
     
+def update_hiscore(config, speed, percentage, time):
+    updated = False
+    ret = 0
+    if(speed > config['Hiscore1'].getfloat('WordsPerMin')):
+        config['Hiscore3']['WordsPerMin'] = config['Hiscore2']['WordsPerMin']
+        config['Hiscore3']['Accuracy'] = config['Hiscore2']['Accuracy']
+        config['Hiscore3']['Time'] = config['Hiscore2']['Time']
+
+        config['Hiscore2']['WordsPerMin'] = config['Hiscore1']['WordsPerMin']
+        config['Hiscore2']['Accuracy'] = config['Hiscore1']['Accuracy']
+        config['Hiscore2']['Time'] = config['Hiscore1']['Time']
+
+        config['Hiscore1']['WordsPerMin'] = str(round(speed,1))
+        config['Hiscore1']['Accuracy'] = str(round(percentage,1))
+        config['Hiscore1']['Time'] = str(round(time,1))
+
+        updated = True
+        ret = 1
+    elif(speed > config['Hiscore2'].getfloat('WordsPerMin')):
+        config['Hiscore3']['WordsPerMin'] = config['Hiscore2']['WordsPerMin']
+        config['Hiscore3']['Accuracy'] = config['Hiscore2']['Accuracy']
+        config['Hiscore3']['Time'] = config['Hiscore2']['Time']
+
+        config['Hiscore2']['WordsPerMin'] = str(round(speed,1))
+        config['Hiscore2']['Accuracy'] = str(round(percentage,1))
+        config['Hiscore2']['Time'] = str(round(time,1))
+        updated = True
+        ret = 2
+    elif(speed > config['Hiscore3'].getfloat('WordsPerMin')):
+        config['Hiscore3']['WordsPerMin'] = str(round(speed,1))
+        config['Hiscore3']['Accuracy'] = str(round(percentage,1))
+        config['Hiscore3']['Time'] = str(round(time,1))
+        updated = True
+        ret = 3
+    if updated:
+        with open('config.ini', 'w') as configfile:
+            config.write(configfile)
+    return ret
 
 def main(stdscr):
     config = configparser.ConfigParser()
@@ -97,7 +135,7 @@ def main(stdscr):
     if(interval > 0):
         set_timer(interval)
     start = time.time()
-    printscreen(stdscr, message, 0, 0, 0, correct)
+    printscreen(stdscr, message, 0, 0, 0, correct, 0)
 
     x = 0
     y = 0
@@ -123,9 +161,23 @@ def main(stdscr):
         current = time.time()
         speed = sum(correct)/5 / (current - start) * 60
         percentage = sum(correct) / x * 100
-        y = printscreen(stdscr, message, percentage, speed, x, correct)
-    stdscr.addstr(y, 0, "Finished - Press any key to exit", curses.A_REVERSE) 
+        y = printscreen(stdscr, message, percentage, speed, x, correct, time.time() - start)
+    hiscore = update_hiscore(config, speed, percentage, time.time() - start)
+    stdscr.addstr(y, 0, f"High score 1: {config['Hiscore1']['WordsPerMin']} words per min | {config['Hiscore1']['Accuracy']} % accuracy | {config['Hiscore1']['Time']} s", curses.A_REVERSE)
+    stdscr.addstr(y+1, 0, f"High score 2: {config['Hiscore2']['WordsPerMin']} words per min | {config['Hiscore2']['Accuracy']} % accuracy | {config['Hiscore2']['Time']} s", curses.A_REVERSE)
+    stdscr.addstr(y+2, 0, f"High score 3: {config['Hiscore3']['WordsPerMin']} words per min | {config['Hiscore3']['Accuracy']} % accuracy | {config['Hiscore3']['Time']} s", curses.A_REVERSE)
+    if hiscore > 0:
+        stdscr.addstr(y+3, 0, f"New high score {hiscore}!", curses.A_REVERSE)
+        stdscr.refresh()
+        time.sleep(5)
+        stdscr.addstr(y+4, 0, "Finished - Press any key to exit", curses.A_REVERSE)
+    else:
+        stdscr.refresh()
+        time.sleep(5)
+        stdscr.addstr(y+3, 0, "Finished - Press any key to exit", curses.A_REVERSE)
+    stdscr.refresh()
 
+    curses.flushinp()
     while(stdscr.getch() == -1):
         pass
 
