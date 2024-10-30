@@ -1,44 +1,25 @@
+"""Main application with ncurses UI for typing training."""
+
 import curses
 import curses.ascii
-import random
-import nltk
 import time
 import configparser
 import threading
-
-nltk.download('reuters')
-nltk.download('punkt')
-
-from nltk.corpus import reuters
-from nltk import bigrams, FreqDist, ConditionalFreqDist
+import gentext
 
 endloop = False
 
 def timer():
+    """Timer function to end the game after a certain time."""
     global endloop
     endloop = True
 
 def set_timer(interval):
+    """Set a timer to end the game after a certain time."""
     threading.Timer(interval, timer).start()
 
-def generate_sentence(length):
-    words = reuters.words()
-    bigrams = list(nltk.bigrams(words))
-    cfd = nltk.ConditionalFreqDist(bigrams)
-
-    word = random.choice(words)
-    sentence = []
-
-    for i in range(length):
-        sentence.append(word)
-        if word in cfd:
-            word = random.choice(list(cfd[word].keys()))
-        else:
-            break
-
-    return ' '.join(sentence)
-
 def wrap_text(text, width):
+    """Wrap text to fit a given width."""
     words = text.split()
     lines = []
     line = ""
@@ -53,6 +34,7 @@ def wrap_text(text, width):
 
 
 def printscreen(stdscr, message, percentage, speed, cursor, correct, time):
+    """Print the screen with the current message and statistics."""
     height, width = stdscr.getmaxyx()
     wrapped_message = wrap_text(message, width)
 
@@ -65,7 +47,7 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct, time):
         if(position <= cursor and cursor - position < len(line)):
             stdscr.chgat(y, cursor - position, 1, curses.A_REVERSE)
         for i in range(len(line)):
-            if(position + i >= cursor):
+            if position + i >= cursor:
                 break
             elif correct[position + i] == 1:
                 stdscr.chgat(y, i, 1, curses.color_pair(1))
@@ -75,11 +57,12 @@ def printscreen(stdscr, message, percentage, speed, cursor, correct, time):
         y += 1
     stdscr.refresh()
     return y
-    
+  
 def update_hiscore(config, speed, percentage, time):
+    """Update the high score list with the current score, if needed."""
     updated = False
     ret = 0
-    if(speed > config['Hiscore1'].getfloat('WordsPerMin')):
+    if speed > config['Hiscore1'].getfloat('WordsPerMin'):
         config['Hiscore3']['WordsPerMin'] = config['Hiscore2']['WordsPerMin']
         config['Hiscore3']['Accuracy'] = config['Hiscore2']['Accuracy']
         config['Hiscore3']['Time'] = config['Hiscore2']['Time']
@@ -94,7 +77,7 @@ def update_hiscore(config, speed, percentage, time):
 
         updated = True
         ret = 1
-    elif(speed > config['Hiscore2'].getfloat('WordsPerMin')):
+    elif speed > config['Hiscore2'].getfloat('WordsPerMin'):
         config['Hiscore3']['WordsPerMin'] = config['Hiscore2']['WordsPerMin']
         config['Hiscore3']['Accuracy'] = config['Hiscore2']['Accuracy']
         config['Hiscore3']['Time'] = config['Hiscore2']['Time']
@@ -104,7 +87,7 @@ def update_hiscore(config, speed, percentage, time):
         config['Hiscore2']['Time'] = str(round(time,1))
         updated = True
         ret = 2
-    elif(speed > config['Hiscore3'].getfloat('WordsPerMin')):
+    elif speed > config['Hiscore3'].getfloat('WordsPerMin'):
         config['Hiscore3']['WordsPerMin'] = str(round(speed,1))
         config['Hiscore3']['Accuracy'] = str(round(percentage,1))
         config['Hiscore3']['Time'] = str(round(time,1))
@@ -116,12 +99,18 @@ def update_hiscore(config, speed, percentage, time):
     return ret
 
 def main(stdscr):
+    """Main function to run the typing training application."""
     config = configparser.ConfigParser()
     config.read('config.ini')
+    textlen = config.getint('UI', 'textlength')
+    symbols = config.getboolean('Text', 'symbols')
+    numbers = config.getboolean('Text', 'numbers')
+    punctuation = config.getboolean('Text', 'punctuation')
 
-
-    message = generate_sentence(config['UI'].getint('TextLength'))
+    message = gentext.generate_sentence(textlen, symbols, numbers, punctuation)
     correct = []
+    speed = 0
+    percentage = 0
 
     # Initialize ncurses
     curses.curs_set(0)
@@ -132,15 +121,14 @@ def main(stdscr):
     stdscr.nodelay(True)    #set getch() non-blocking
 
     interval = config['UI'].getint('TimeLimit')
-    if(interval > 0):
+    if interval > 0:
         set_timer(interval)
     start = time.time()
-    printscreen(stdscr, message, 0, 0, 0, correct, 0)
+    y = printscreen(stdscr, message, 0, 0, 0, correct, 0)
 
     x = 0
-    y = 0
-    while(x < len(message)):
-        if(endloop):
+    while x < len(message):
+        if endloop:
             break
         ch = stdscr.getch()
         if ch == -1:
@@ -178,10 +166,10 @@ def main(stdscr):
     stdscr.refresh()
 
     curses.flushinp()
-    while(stdscr.getch() == -1):
+    while stdscr.getch() == -1:
         pass
 
 # Run the application
-if __name__ == "__main__": 
+if __name__ == "__main__":
 
     curses.wrapper(main)
