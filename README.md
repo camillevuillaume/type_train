@@ -17,5 +17,8 @@ Or with the relevant OS command in case the package is managed by the OS.
 
 ## Configuration
 You can configure the following parameters in the configuration file `config.ini`:
- - `TimeLimit`: A timer. Any positive value (in seconds) will indicate that the typing test will end automatically after the timer expires. Zero means that the program will continue until the whole text has been typed or ESC has been pressed.
- - `TextLength`: The length of the random text, in words (including punctuation).
+ - `timelimit`: A timer. Any positive value (in seconds) will indicate that the typing test will end automatically after the timer expires. Zero means that the program will continue until the whole text has been typed or ESC has been pressed.
+ - `textlength`: The length of the random text, in words (including punctuation).
+ - `numbers`: Numbers can be generated in the random text.
+ - `punctuation`: Typical punctuation can be generated in the random text.
+ - `symbols`: Symbols other than typical punctuation can be generated in the random text.
