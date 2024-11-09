@@ -98,6 +98,10 @@ def update_hiscore(config, speed, percentage, time):
             config.write(configfile)
     return ret
 
+def print_hiscore(stdscr, pos, number, wpm, accuracy, time):
+    """Print a high score entry."""
+    stdscr.addstr(pos, 0, f"High score {number}: {wpm} words per min | {accuracy} % accuracy | {time} s", curses.A_REVERSE)
+
 def main(stdscr):
     """Main function to run the typing training application."""
     config = configparser.ConfigParser()
@@ -151,9 +155,13 @@ def main(stdscr):
         percentage = sum(correct) / x * 100
         y = printscreen(stdscr, message, percentage, speed, x, correct, time.time() - start)
     hiscore = update_hiscore(config, speed, percentage, time.time() - start)
-    stdscr.addstr(y, 0, f"High score 1: {config['Hiscore1']['WordsPerMin']} words per min | {config['Hiscore1']['Accuracy']} % accuracy | {config['Hiscore1']['Time']} s", curses.A_REVERSE)
-    stdscr.addstr(y+1, 0, f"High score 2: {config['Hiscore2']['WordsPerMin']} words per min | {config['Hiscore2']['Accuracy']} % accuracy | {config['Hiscore2']['Time']} s", curses.A_REVERSE)
-    stdscr.addstr(y+2, 0, f"High score 3: {config['Hiscore3']['WordsPerMin']} words per min | {config['Hiscore3']['Accuracy']} % accuracy | {config['Hiscore3']['Time']} s", curses.A_REVERSE)
+    print_hiscore(stdscr, y,  1, config['Hiscore1']['WordsPerMin'], config['Hiscore1']['Accuracy'], config['Hiscore1']['Time'])
+    print_hiscore(stdscr, y+1, 2, config['Hiscore2']['WordsPerMin'], config['Hiscore2']['Accuracy'], config['Hiscore2']['Time'])
+    print_hiscore(stdscr, y+2, 3, config['Hiscore3']['WordsPerMin'], config['Hiscore3']['Accuracy'], config['Hiscore3']['Time'])
+    
+    #stdscr.addstr(y, 0, f"High score 1: {config['Hiscore1']['WordsPerMin']} words per min | {config['Hiscore1']['Accuracy']} % accuracy | {config['Hiscore1']['Time']} s", curses.A_REVERSE)
+    #stdscr.addstr(y+1, 0, f"High score 2: {config['Hiscore2']['WordsPerMin']} words per min | {config['Hiscore2']['Accuracy']} % accuracy | {config['Hiscore2']['Time']} s", curses.A_REVERSE)
+    #stdscr.addstr(y+2, 0, f"High score 3: {config['Hiscore3']['WordsPerMin']} words per min | {config['Hiscore3']['Accuracy']} % accuracy | {config['Hiscore3']['Time']} s", curses.A_REVERSE)
     if hiscore > 0:
         stdscr.addstr(y+3, 0, f"New high score {hiscore}!", curses.A_REVERSE)
         stdscr.refresh()
